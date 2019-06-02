@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:security="http://www.springframework.org/schema/security"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:dubbo="http://code.alibabatech.com/schema/dubbo"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+    http://www.springframework.org/schema/beans/spring-beans.xsd
+    http://www.springframework.org/schema/security
+    http://www.springframework.org/schema/security/spring-security.xsd http://code.alibabatech.com/schema/dubbo http://code.alibabatech.com/schema/dubbo/dubbo.xsd">
+
+    <!--&lt;!&ndash;配置jsr250&ndash;&gt;-->
+    <!--<security:global-method-security jsr250-annotations="enabled"/>-->
+    <!-- 配置不拦截的资源 -->
+    <security:http pattern="/*.html" security="none"/>
+    <security:http pattern="/css/**" security="none"/>
+    <security:http pattern="/img/**" security="none"/>
+    <security:http pattern="/js/**" security="none"/>
+    <security:http pattern="/plugins/**" security="none"/>
+
+    <!--
+    	配置具体的规则
+    	auto-config="true"	不用自己编写登录的页面，框架提供默认登录页面
+    	use-expressions="false"	是否使用SPEL表达式（没学习过）
+    -->
+    <security:http  use-expressions="false">
+        <!-- 配置具体的拦截的规则 pattern="请求路径的规则" access="访问系统的人，必须有ROLE_USER的角色" -->
+        <security:intercept-url pattern="/**" access="ROLE_SELLER"/>
+
+        <!-- 定义跳转的具体的页面 -->
+        <security:form-login
+                login-page="/shoplogin.html"
+                default-target-url="/admin/index.html"
+                authentication-failure-forward-url="/shoplogin.html"
+                always-use-default-target="true"
+        />
+
+        <!-- 关闭跨域请求伪造 -->
+        <!--csrf:cross-site request forgery-->
+        <security:csrf disabled="true"/>
+
+        <!-- 退出 -->
+        <security:logout  />
+
+        <security:headers>
+            <security:frame-options policy="SAMEORIGIN"/>
+        </security:headers>
+
+    </security:http>
+
+    <!-- 切换成数据库中的用户名和密码 -->
+    <security:authentication-manager>
+        <security:authentication-provider user-service-ref="userService">
+            <!--&lt;!&ndash;&lt;!&ndash; 配置加密的方式 &ndash;&gt;&ndash;&gt;-->
+            <!--<security:password-encoder ref="passwordEncoder"/>-->
+        </security:authentication-provider>
+    </security:authentication-manager>
+
+
+
+    <dubbo:application name="pinyougou-shop-web" />
+    <dubbo:registry address="zookeeper://192.168.25.128:2181"/>
+    <dubbo:reference interface="com.pinyougou.sellergoods.service.SellerService" id="sellerService"/>
+
+    <bean id="userService" class="com.pinyougou.shop.service.UserService">
+        <property name="sellerService" ref="sellerService"></property>
+    </bean>
+
+    <!--&lt;!&ndash; 配置加密类 &ndash;&gt;-->
+    <!--<bean id="passwordEncoder" class="org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder"/>-->
+
+    <!--&lt;!&ndash;提供了入门的方式，在内存中存入用户名和密码&ndash;&gt;-->
+    <!--<security:authentication-manager>-->
+    	<!--<security:authentication-provider>-->
+    		<!--<security:user-service>-->
+    			<!--<security:user name="admin" password="123456" authorities="ROLE_ADMIN"/>-->
+    			<!--<security:user name="sunwukong" password="123456" authorities="ROLE_ADMIN"/>-->
+    		<!--</security:user-service>-->
+    	<!--</security:authentication-provider>-->
+    <!--</security:authentication-manager>-->
+
+
+</beans>
+
+
+
